@@ -4,8 +4,13 @@
 <head>
 
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="theme-color" content="#000">
+
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Construye Más">
+<link rel="apple-touch-icon" href="assets/icon-180.png">
+
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 
 <title>Construye Más – Energías Limpias</title>
 
@@ -17,10 +22,16 @@
 
 *{margin:0;padding:0;box-sizing:border-box;font-family:Arial}
 
+html,body{
+height:100%;
+background:#1a1a1a;
+}
+
 body{
-background:#000;
 color:white;
-overflow:hidden
+overflow:hidden;
+padding-top:env(safe-area-inset-top);
+padding-bottom:env(safe-area-inset-bottom);
 }
 
 .screen{
@@ -54,22 +65,23 @@ padding:14px;
 margin-bottom:10px;
 border-radius:10px;
 border:none;
-background:#222;
+background:rgba(255,255,255,0.08);
 color:white;
 font-size:16px;
 text-align:center
 }
 
 .result-box{
-background:#111;
+background:rgba(0,0,0,0.35);
 padding:20px;
 border-radius:14px;
-margin-top:10px
+margin-top:10px;
+backdrop-filter:blur(6px)
 }
 
 canvas{
 margin-top:20px;
-background:#111;
+background:rgba(0,0,0,0.35);
 border-radius:10px
 }
 
@@ -92,7 +104,7 @@ width:100%
 width:75%;
 height:60px;
 margin:auto;
-background:#111;
+background:rgba(0,0,0,0.35);
 border-radius:40px;
 position:relative
 }
@@ -111,7 +123,7 @@ top:0
 
 #splash{
 background:
-linear-gradient(rgba(0,0,0,.65),rgba(0,0,0,.65)),
+linear-gradient(rgba(0,0,0,.45),rgba(0,0,0,.45)),
 url("assets/splash.png");
 background-size:cover;
 background-position:center;
@@ -119,7 +131,7 @@ background-position:center;
 
 #cliente{
 background:
-linear-gradient(rgba(0,0,0,.75),rgba(0,0,0,.75)),
+linear-gradient(rgba(0,0,0,.55),rgba(0,0,0,.55)),
 url("assets/cliente.png");
 background-size:cover;
 background-position:center;
@@ -127,7 +139,7 @@ background-position:center;
 
 #recibo{
 background:
-linear-gradient(rgba(0,0,0,.75),rgba(0,0,0,.75)),
+linear-gradient(rgba(0,0,0,.55),rgba(0,0,0,.55)),
 url("assets/recibo.png");
 background-size:cover;
 background-position:center;
@@ -135,7 +147,7 @@ background-position:center;
 
 #analisis{
 background:
-linear-gradient(rgba(0,0,0,.75),rgba(0,0,0,.75)),
+linear-gradient(rgba(0,0,0,.55),rgba(0,0,0,.55)),
 url("assets/analisis.png");
 background-size:cover;
 background-position:center;
@@ -143,7 +155,7 @@ background-position:center;
 
 #paneles{
 background:
-linear-gradient(rgba(0,0,0,.75),rgba(0,0,0,.75)),
+linear-gradient(rgba(0,0,0,.55),rgba(0,0,0,.55)),
 url("assets/paneles.png");
 background-size:cover;
 background-position:center;
@@ -151,7 +163,7 @@ background-position:center;
 
 #cotizacion{
 background:
-linear-gradient(rgba(0,0,0,.75),rgba(0,0,0,.75)),
+linear-gradient(rgba(0,0,0,.55),rgba(0,0,0,.55)),
 url("assets/cotizacion.png");
 background-size:cover;
 background-position:center;
@@ -159,7 +171,7 @@ background-position:center;
 
 #reporte{
 background:
-linear-gradient(rgba(0,0,0,.75),rgba(0,0,0,.75)),
+linear-gradient(rgba(0,0,0,.55),rgba(0,0,0,.55)),
 url("assets/reporte.png");
 background-size:cover;
 background-position:center;
@@ -204,7 +216,6 @@ background-position:center;
 
 </div>
 </div>
-
 
 <!-- RECIBO -->
 
@@ -335,7 +346,6 @@ background-position:center;
 
 </div>
 </div>
-
 
 <script>
 
