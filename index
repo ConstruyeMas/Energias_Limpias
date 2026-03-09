@@ -1,0 +1,763 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#000">
+
+<title>Construye Más – Energías Limpias</title>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+
+<style>
+
+*{margin:0;padding:0;box-sizing:border-box;font-family:Arial}
+
+body{
+background:#000;
+color:white;
+overflow:hidden
+}
+
+.screen{
+position:fixed;
+inset:0;
+display:flex;
+flex-direction:column;
+align-items:center;
+justify-content:center;
+opacity:0;
+pointer-events:none;
+transition:.4s
+}
+
+.screen.active{
+opacity:1;
+pointer-events:auto
+}
+
+.content{
+width:90%;
+max-width:420px;
+text-align:center
+}
+
+h1{margin-bottom:20px}
+
+input{
+width:100%;
+padding:14px;
+margin-bottom:10px;
+border-radius:10px;
+border:none;
+background:#222;
+color:white;
+font-size:16px;
+text-align:center
+}
+
+.result-box{
+background:#111;
+padding:20px;
+border-radius:14px;
+margin-top:10px
+}
+
+canvas{
+margin-top:20px;
+background:#111;
+border-radius:10px
+}
+
+button{
+margin-top:10px;
+padding:12px 18px;
+border:none;
+border-radius:8px;
+background:#1f8f4d;
+color:white;
+font-size:14px
+}
+
+.slider-container{
+margin-top:40px;
+width:100%
+}
+
+.slider-track{
+width:75%;
+height:60px;
+margin:auto;
+background:#111;
+border-radius:40px;
+position:relative
+}
+
+.slider-thumb{
+width:60px;
+height:60px;
+background:white;
+border-radius:50%;
+position:absolute;
+left:0;
+top:0
+}
+
+/* FONDOS POR PANTALLA */
+
+#splash{
+background:
+linear-gradient(rgba(0,0,0,.65),rgba(0,0,0,.65)),
+url("splash.png");
+background-size:cover;
+background-position:center;
+}
+
+#cliente{
+background:
+linear-gradient(rgba(0,0,0,.75),rgba(0,0,0,.75)),
+url("cliente.png");
+background-size:cover;
+background-position:center;
+}
+
+#recibo{
+background:
+linear-gradient(rgba(0,0,0,.75),rgba(0,0,0,.75)),
+url("recibo.png");
+background-size:cover;
+background-position:center;
+}
+
+#analisis{
+background:
+linear-gradient(rgba(0,0,0,.75),rgba(0,0,0,.75)),
+url("analisis.png");
+background-size:cover;
+background-position:center;
+}
+
+#paneles{
+background:
+linear-gradient(rgba(0,0,0,.75),rgba(0,0,0,.75)),
+url("paneles.png");
+background-size:cover;
+background-position:center;
+}
+
+#cotizacion{
+background:
+linear-gradient(rgba(0,0,0,.75),rgba(0,0,0,.75)),
+url("cotizacion.png");
+background-size:cover;
+background-position:center;
+}
+
+#reporte{
+background:
+linear-gradient(rgba(0,0,0,.75),rgba(0,0,0,.75)),
+url("reporte.png");
+background-size:cover;
+background-position:center;
+}
+
+</style>
+
+</head>
+
+<body>
+
+<!-- SPLASH -->
+
+<div class="screen active" id="splash">
+<div class="content">
+<h1>Construye MÁS</h1>
+<p>Energías Limpias</p>
+</div>
+</div>
+
+
+<!-- CLIENTE -->
+
+<div class="screen" id="cliente">
+<div class="content">
+
+<h1>Cliente</h1>
+
+<input id="nombre" placeholder="Nombre del cliente">
+<input id="telefono" placeholder="Teléfono">
+<input id="calle" placeholder="Calle">
+<input id="numero" placeholder="Número">
+<input id="colonia" placeholder="Colonia">
+<input id="cp" placeholder="Código Postal">
+<input id="ciudad" placeholder="Ciudad">
+
+<div class="slider-container">
+<div class="slider-track">
+<div class="slider-thumb"></div>
+</div>
+</div>
+
+</div>
+</div>
+
+
+<!-- RECIBO -->
+
+<div class="screen" id="recibo">
+<div class="content">
+
+<h1>Recibo CFE</h1>
+
+<input id="consumo" placeholder="Consumo bimestral kWh">
+<input id="pago" placeholder="Pago bimestral $">
+
+<input type="file" accept="image/*" id="fotoInput">
+
+<img id="previewFoto" style="max-width:100%;margin-top:10px">
+
+<div class="slider-container">
+<div class="slider-track">
+<div class="slider-thumb"></div>
+</div>
+</div>
+
+</div>
+</div>
+
+
+<!-- ANALISIS -->
+
+<div class="screen" id="analisis">
+<div class="content">
+
+<h1>Análisis energético</h1>
+
+<div class="result-box">
+
+<p id="resultadoConsumo"></p>
+<p id="resultadoSistema"></p>
+
+<hr>
+
+<p id="consumoAnualTexto"></p>
+<p id="radiacionZona"></p>
+<p id="eficienciaSistema"></p>
+<p id="diagnosticoEnergia"></p>
+
+</div>
+
+<div class="slider-container">
+<div class="slider-track">
+<div class="slider-thumb"></div>
+</div>
+</div>
+
+</div>
+</div>
+
+
+<!-- PANELES -->
+
+<div class="screen" id="paneles">
+<div class="content">
+
+<h1>Configuración del sistema</h1>
+
+<div class="result-box" id="opcionA"></div>
+<div class="result-box" id="opcionB"></div>
+<div class="result-box" id="opcionC"></div>
+
+</div>
+</div>
+
+
+<!-- COTIZACION -->
+
+<div class="screen" id="cotizacion">
+<div class="content">
+
+<h1>Cotización</h1>
+
+<div class="result-box">
+
+<p id="panelFinal"></p>
+<p id="produccionSistema"></p>
+<p id="coberturaSistema"></p>
+<p id="areaSistemaTexto"></p>
+
+<p id="ahorroMensual"></p>
+<p id="retorno"></p>
+
+<h2 id="precioFinal"></h2>
+
+</div>
+
+<canvas id="graficaROI"></canvas>
+
+<div class="slider-container">
+<div class="slider-track">
+<div class="slider-thumb"></div>
+</div>
+</div>
+
+</div>
+</div>
+
+
+<!-- REPORTE -->
+
+<div class="screen" id="reporte">
+<div class="content">
+
+<h1>Reporte</h1>
+
+<div class="result-box">
+
+<p id="repFolio"></p>
+<p id="repCliente"></p>
+<p id="repConsumo"></p>
+<p id="repDiagnostico"></p>
+<p id="repSistema"></p>
+<p id="repArea"></p>
+<p id="repPrecio"></p>
+
+<div id="qr"></div>
+
+<button onclick="generarPDF()">Generar PDF</button>
+<button onclick="enviarWhatsApp()">Enviar por WhatsApp</button>
+
+</div>
+
+</div>
+</div>
+
+
+<script>
+
+/* VARIABLES */
+
+let consumoBimestral
+let pagoBimestral
+let consumoMensual
+let consumoAnual
+let sistemaKW
+let costoKWH
+
+let produccionAnual
+let coberturaConsumo
+let areaSistema
+
+let ahorroMensualGlobal
+let precioSistema
+
+let radiacionSolar
+let diagnosticoTexto
+let folioCotizacion
+
+let fotoReciboBase64
+
+const EFICIENCIA_SISTEMA = 0.85
+const DEGRADACION_PANEL = 0.005
+
+
+/* NAVEGACION */
+
+let currentIndex=0
+
+const screens=[
+"splash",
+"cliente",
+"recibo",
+"analisis",
+"paneles",
+"cotizacion",
+"reporte"
+]
+
+function goTo(id){
+
+document.querySelectorAll(".screen")
+.forEach(s=>s.classList.remove("active"))
+
+document.getElementById(id).classList.add("active")
+
+}
+
+function nextScreen(){
+
+currentIndex++
+
+if(currentIndex>=screens.length)return
+
+goTo(screens[currentIndex])
+
+if(screens[currentIndex]==="analisis") calcularSistema()
+if(screens[currentIndex]==="reporte") llenarReporte()
+
+}
+
+/* FOTO RECIBO */
+
+fotoInput.addEventListener("change",function(){
+
+let reader=new FileReader()
+
+reader.onload=e=>{
+fotoReciboBase64 = e.target.result
+previewFoto.src = fotoReciboBase64
+}
+
+reader.readAsDataURL(this.files[0])
+
+})
+
+
+/* RADIACION */
+
+function calcularRadiacion(){
+
+let ciudadUsuario = ciudad.value.toLowerCase()
+
+if(ciudadUsuario.includes("durango")) radiacionSolar = 1650
+else if(ciudadUsuario.includes("chihuahua")) radiacionSolar = 1750
+else if(ciudadUsuario.includes("hermosillo")) radiacionSolar = 1850
+else radiacionSolar = 1600
+
+}
+
+
+/* CALCULO SISTEMA */
+
+function calcularSistema(){
+
+calcularRadiacion()
+
+consumoBimestral=parseFloat(consumo.value)
+pagoBimestral=parseFloat(pago.value)
+
+consumoMensual=consumoBimestral/2
+consumoAnual=consumoMensual*12
+
+costoKWH=pagoBimestral/consumoBimestral
+
+sistemaKW=consumoMensual/150
+
+resultadoConsumo.innerText="Consumo mensual "+consumoMensual.toFixed(0)+" kWh"
+
+resultadoSistema.innerText="Sistema recomendado "+sistemaKW.toFixed(1)+" kW"
+
+consumoAnualTexto.innerText="Consumo anual "+consumoAnual.toFixed(0)+" kWh"
+
+radiacionZona.innerText="Radiación estimada "+radiacionSolar+" kWh/kW/año"
+
+eficienciaSistema.innerText="Eficiencia sistema "+(EFICIENCIA_SISTEMA*100)+"%"
+
+diagnosticoDAC()
+
+calcularPaneles()
+
+}
+
+
+function diagnosticoDAC(){
+
+if(consumoAnual<4000) diagnosticoTexto="Consumo normal"
+else if(consumoAnual<6000) diagnosticoTexto="Consumo elevado"
+else diagnosticoTexto="Riesgo DAC"
+
+diagnosticoEnergia.innerText=diagnosticoTexto
+
+}
+
+
+/* PANELES */
+
+function calcularPaneles(){
+
+let p550=Math.ceil((sistemaKW*1000)/550)
+let p660=Math.ceil((sistemaKW*1000)/660)
+let p770=Math.ceil((sistemaKW*1000)/770)
+
+opcionA.innerText=p550+" paneles 550W"
+opcionB.innerText=p660+" paneles 660W"
+opcionC.innerText=p770+" paneles 770W"
+
+opcionA.onclick=()=>cotizar(p550,550)
+opcionB.onclick=()=>cotizar(p660,660)
+opcionC.onclick=()=>cotizar(p770,770)
+
+}
+
+
+/* COTIZAR */
+
+function generarFolio(){
+
+let año=new Date().getFullYear()
+
+let consecutivo=Date.now().toString().slice(-5)
+
+folioCotizacion="CM-EL-"+año+"-"+consecutivo
+
+}
+
+
+function cotizar(paneles,potencia){
+
+generarFolio()
+
+let potenciaSistema=paneles*potencia/1000
+
+precioSistema=potenciaSistema*20000
+
+produccionAnual = potenciaSistema * radiacionSolar * EFICIENCIA_SISTEMA
+
+coberturaConsumo = (produccionAnual / consumoAnual) * 100
+
+let generacionMensual=produccionAnual/12
+
+ahorroMensualGlobal=generacionMensual*costoKWH
+
+let retorno=precioSistema/(ahorroMensualGlobal*12)
+
+
+/* AREA */
+
+let areaPanel
+
+if(potencia==550) areaPanel=2.6
+else if(potencia==660) areaPanel=3
+else areaPanel=3.5
+
+areaSistema = paneles * areaPanel
+
+
+/* REDONDEOS */
+
+let produccionRedondeada = Math.round(produccionAnual/100)*100
+
+let ahorroRedondeado = Math.round(ahorroMensualGlobal/50)*50
+
+panelFinal.innerText="Paneles "+paneles
+
+produccionSistema.innerText="Producción anual aproximada "+produccionRedondeada+" kWh"
+
+coberturaSistema.innerText="Cobertura del consumo "+coberturaConsumo.toFixed(0)+"%"
+
+areaSistemaTexto.innerText="Área requerida aproximada "+areaSistema.toFixed(1)+" m²"
+
+ahorroMensual.innerText="Ahorro mensual estimado $"+ahorroRedondeado
+
+retorno.innerText="Retorno estimado "+Math.round(retorno)+" años"
+
+precioFinal.innerText="Inversión $"+precioSistema.toFixed(0)
+
+generarGrafica()
+
+nextScreen()
+
+}
+
+
+/* GRAFICA */
+
+function generarGrafica(){
+
+let años=[]
+let ahorro=[]
+let inversion=[]
+
+for(let i=0;i<=25;i++){
+
+let produccionDegradada =
+produccionAnual*Math.pow(1-DEGRADACION_PANEL,i)
+
+let ahorroAnual = produccionDegradada*costoKWH
+
+años.push(i)
+
+ahorro.push((ahorroAnual*i)-precioSistema)
+
+inversion.push(precioSistema)
+
+}
+
+new Chart(graficaROI,{
+type:'line',
+data:{
+labels:años,
+datasets:[
+{label:'Ahorro acumulado',data:ahorro,borderColor:'#00ff88'},
+{label:'Inversión',data:inversion,borderColor:'#ff4444'}
+]
+}
+})
+
+}
+
+
+/* QR */
+
+function generarQR(){
+
+let textoQR =
+"Construye Más Energías Limpias\n"+
+"Folio: "+folioCotizacion+"\n"+
+"Cliente: "+nombre.value+"\n"+
+panelFinal.innerText+"\n"+
+precioFinal.innerText
+
+document.getElementById("qr").innerHTML=""
+
+new QRCode(document.getElementById("qr"),{
+text:textoQR,
+width:120,
+height:120
+})
+
+}
+
+
+/* REPORTE */
+
+function llenarReporte(){
+
+repFolio.innerText="Folio: "+folioCotizacion
+
+repCliente.innerText="Cliente "+nombre.value
+
+repConsumo.innerText="Consumo anual "+consumoAnual.toFixed(0)
+
+repDiagnostico.innerText="Diagnóstico "+diagnosticoTexto
+
+repSistema.innerText=panelFinal.innerText
+
+repArea.innerText="Área requerida del sistema "+areaSistema.toFixed(1)+" m²"
+
+repPrecio.innerText=precioFinal.innerText
+
+generarQR()
+
+}
+
+
+/* PDF */
+
+function generarPDF(){
+
+const { jsPDF } = window.jspdf
+
+let doc=new jsPDF()
+
+doc.text("Construye Más Energías Limpias",20,20)
+
+doc.text(repFolio.innerText,20,40)
+
+doc.text(repCliente.innerText,20,50)
+
+doc.text(repConsumo.innerText,20,60)
+
+doc.text(repDiagnostico.innerText,20,70)
+
+doc.text(repSistema.innerText,20,80)
+
+doc.text(repArea.innerText,20,90)
+
+doc.text(repPrecio.innerText,20,100)
+
+if(fotoReciboBase64){
+
+doc.addImage(fotoReciboBase64,"JPEG",20,120,170,90)
+
+}
+
+let qrCanvas = document.querySelector("#qr canvas")
+
+if(qrCanvas){
+
+let qrImg = qrCanvas.toDataURL("image/png")
+
+doc.addImage(qrImg,"PNG",150,230,40,40)
+
+}
+
+doc.save("cotizacion-"+folioCotizacion+".pdf")
+
+}
+
+
+/* WHATSAPP */
+
+function enviarWhatsApp(){
+
+let telefonoCliente = telefono.value.replace(/\D/g,'')
+
+let mensaje =
+"*Construye Más – Energías Limpias*%0A"+
+"Folio: "+folioCotizacion+"%0A"+
+repSistema.innerText+"%0A"+
+repPrecio.innerText
+
+let url = "https://wa.me/52"+telefonoCliente+"?text="+mensaje
+
+window.open(url,"_blank")
+
+}
+
+
+/* SLIDER */
+
+document.querySelectorAll(".slider-thumb").forEach(thumb=>{
+
+const track=thumb.parentElement
+
+let startX
+let dragging=false
+
+thumb.addEventListener("touchstart",e=>{
+dragging=true
+startX=e.touches[0].clientX
+})
+
+thumb.addEventListener("touchmove",e=>{
+
+if(!dragging)return
+
+let max=track.offsetWidth-thumb.offsetWidth
+
+let x=Math.max(0,Math.min(e.touches[0].clientX-startX,max))
+
+thumb.style.left=x+"px"
+
+})
+
+thumb.addEventListener("touchend",()=>{
+
+let max=track.offsetWidth-thumb.offsetWidth
+
+if(parseInt(thumb.style.left)>max*0.8){
+
+nextScreen()
+
+}
+
+thumb.style.left="0"
+
+dragging=false
+
+})
+
+})
+
+
+setTimeout(()=>{nextScreen()},2000)
+
+</script>
+
+</body>
+</html>
