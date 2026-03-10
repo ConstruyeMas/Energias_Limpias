@@ -24,14 +24,59 @@
 
 html,body{
 height:100%;
-background:#1a1a1a;
+background:#000000;
 }
 
 body{
 color:white;
 overflow:hidden;
-padding-top:env(safe-area-inset-top);
-padding-bottom:env(safe-area-inset-bottom);
+}
+
+/* SPLASH */
+#splashScreen{
+position:fixed;
+inset:0;
+background:url('assets/splash-intro.png') center/cover no-repeat;
+display:flex;
+align-items:center;
+justify-content:center;
+z-index:9999;
+}
+
+.logoSplash{
+opacity:0;
+transform:scale(.9);
+animation:logoFade 3s ease forwards;
+}
+
+.logoSplash img{
+width:95vw;
+max-width:1000px;
+}
+
+@keyframes logoFade{
+to{
+opacity:1;
+transform:scale(1);
+}
+}
+
+.splashLogo{
+width:120vw;
+max-width:1000px;
+opacity:0;
+animation:splashAppear 1.6s ease forwards;
+}
+
+@keyframes splashAppear{
+from{
+opacity:0;
+transform:scale(.9);
+}
+to{
+opacity:1;
+transform:scale(1);
+}
 }
 
 .screen{
@@ -42,8 +87,11 @@ flex-direction:column;
 align-items:center;
 justify-content:center;
 opacity:0;
+transform:translateY(20px);
 pointer-events:none;
-transition:.4s
+transition:
+opacity 6s cubic-bezier(0.22,1,0.36,1),
+transform 6s cubic-bezier(0.22,1,0.36,1);
 }
 
 .screen.active{
@@ -54,7 +102,8 @@ pointer-events:auto
 .content{
 width:90%;
 max-width:420px;
-text-align:center
+text-align:center;
+margin-top:2vh;
 }
 
 h1{margin-bottom:20px}
@@ -72,11 +121,13 @@ text-align:center
 }
 
 .result-box{
-background:rgba(0,0,0,0.35);
+background:rgba(255,255,255,0.02);
 padding:20px;
-border-radius:14px;
+border-radius:3.5px;
 margin-top:10px;
-backdrop-filter:blur(6px)
+backdrop-filter:blur(2px);
+-webkit-backdrop-filter:blur(2px);
+border:1px solid rgba(255,255,255,0.15);
 }
 
 canvas{
@@ -96,8 +147,12 @@ font-size:14px
 }
 
 .slider-container{
-margin-top:40px;
-width:100%
+position:absolute;
+bottom:40px;
+left:50%;
+transform:translateX(-50%);
+width:90%;
+max-width:420px;
 }
 
 .slider-track{
@@ -112,11 +167,12 @@ position:relative
 .slider-thumb{
 width:60px;
 height:60px;
-background:white;
+background:rgb(0,0,0) url("assets/slide-icon1.png") center/95% no-repeat;
 border-radius:50%;
 position:absolute;
 left:0;
-top:0
+top:0;
+box-shadow:0 4px 12px rgb(0,0,0);
 }
 
 /* FONDOS POR PANTALLA */
@@ -124,9 +180,7 @@ top:0
 #splash{
 background:
 linear-gradient(rgba(0,0,0,.45),rgba(0,0,0,.45)),
-url("assets/splash.png");
-background-size:cover;
-background-position:center;
+url("assets/splash1.png") center/cover no-repeat;
 }
 
 #cliente{
@@ -134,7 +188,7 @@ background:
 linear-gradient(rgba(0,0,0,.55),rgba(0,0,0,.55)),
 url("assets/cliente.png");
 background-size:cover;
-background-position:center;
+background-position:center bottom;
 }
 
 #recibo{
@@ -186,10 +240,11 @@ background-position:center;
 <!-- SPLASH -->
 
 <div class="screen active" id="splash">
+<img src="assets/splash-intro.png" class="splashLogo">
+
 <div class="content">
-<h1>Construye MÁS</h1>
-<p>Energías Limpias</p>
 </div>
+
 </div>
 
 
@@ -197,8 +252,6 @@ background-position:center;
 
 <div class="screen" id="cliente">
 <div class="content">
-
-<h1>Cliente</h1>
 
 <input id="nombre" placeholder="Nombre del cliente">
 <input id="telefono" placeholder="Teléfono">
@@ -222,8 +275,6 @@ background-position:center;
 <div class="screen" id="recibo">
 <div class="content">
 
-<h1>Recibo CFE</h1>
-
 <input id="consumo" placeholder="Consumo bimestral kWh">
 <input id="pago" placeholder="Pago bimestral $">
 
@@ -245,8 +296,6 @@ background-position:center;
 
 <div class="screen" id="analisis">
 <div class="content">
-
-<h1>Análisis energético</h1>
 
 <div class="result-box">
 
@@ -277,8 +326,6 @@ background-position:center;
 <div class="screen" id="paneles">
 <div class="content">
 
-<h1>Configuración del sistema</h1>
-
 <div class="result-box" id="opcionA"></div>
 <div class="result-box" id="opcionB"></div>
 <div class="result-box" id="opcionC"></div>
@@ -291,8 +338,6 @@ background-position:center;
 
 <div class="screen" id="cotizacion">
 <div class="content">
-
-<h1>Cotización</h1>
 
 <div class="result-box">
 
@@ -324,8 +369,6 @@ background-position:center;
 
 <div class="screen" id="reporte">
 <div class="content">
-
-<h1>Reporte</h1>
 
 <div class="result-box">
 
