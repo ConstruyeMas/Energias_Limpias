@@ -12,7 +12,7 @@
 
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 
-<title>Construye Más – Energías Limpias</title>
+<title>Construye Más â€“ Energí­as Limpias</title>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
@@ -136,6 +136,11 @@ background:rgba(0,0,0,0.35);
 border-radius:10px
 }
 
+#qr{
+display:flex;
+justify-content:center;
+margin-top:10px
+}
 button{
 margin-top:10px;
 padding:12px 18px;
@@ -254,11 +259,11 @@ background-position:center;
 <div class="content">
 
 <input id="nombre" placeholder="Nombre del cliente">
-<input id="telefono" placeholder="Teléfono">
+<input id="telefono" placeholder="TelÃ©fono">
 <input id="calle" placeholder="Calle">
-<input id="numero" placeholder="Número">
+<input id="numero" placeholder="NÃºmero">
 <input id="colonia" placeholder="Colonia">
-<input id="cp" placeholder="Código Postal">
+<input id="cp" placeholder="CÃ³digo Postal">
 <input id="ciudad" placeholder="Ciudad">
 
 <div class="slider-container">
@@ -417,6 +422,18 @@ let fotoReciboBase64
 const EFICIENCIA_SISTEMA = 0.85
 const DEGRADACION_PANEL = 0.005
 
+const PDF_TEMPLATE_URL = "assets/plantilla.png"
+const PDF_PAGE = { w: 210, h: 297 }
+const PDF_LAYOUT = {
+nombre: { x: 195, y: 48, size: 10, align: "right" },
+monto: { x: 105, y: 120, size: 18, align: "center" },
+montoTexto: { x: 105, y: 128, size: 8, align: "center" },
+referencia: { x: 105, y: 190, size: 14, align: "center" },
+folioAut: { x: 105, y: 214, size: 11, align: "center" },
+qr: { x: 20, y: 235, size: 40 }
+}
+const PDF_SHOW_RECIBO = false
+const PDF_REPORT = { col1X: 20, col2X: 115, startY: 140, lineHeight: 5.5, size: 8 }
 
 /* NAVEGACION */
 
@@ -506,7 +523,7 @@ resultadoSistema.innerText="Sistema recomendado "+sistemaKW.toFixed(1)+" kW"
 
 consumoAnualTexto.innerText="Consumo anual "+consumoAnual.toFixed(0)+" kWh"
 
-radiacionZona.innerText="Radiación estimada "+radiacionSolar+" kWh/kW/año"
+radiacionZona.innerText="RadiaciÃ³n estimada "+radiacionSolar+" kWh/kW/aÃ±o"
 
 eficienciaSistema.innerText="Eficiencia sistema "+(EFICIENCIA_SISTEMA*100)+"%"
 
@@ -551,11 +568,11 @@ opcionC.onclick=()=>cotizar(p770,770)
 
 function generarFolio(){
 
-let año=new Date().getFullYear()
+let ano=new Date().getFullYear()
 
 let consecutivo=Date.now().toString().slice(-5)
 
-folioCotizacion="CM-EL-"+año+"-"+consecutivo
+folioCotizacion="CM-EL-"+ano+"-"+consecutivo
 
 }
 
@@ -598,17 +615,17 @@ let ahorroRedondeado = Math.round(ahorroMensualGlobal/50)*50
 
 panelFinal.innerText="Paneles "+paneles
 
-produccionSistema.innerText="Producción anual aproximada "+produccionRedondeada+" kWh"
+produccionSistema.innerText="ProducciÃ³n anual aproximada "+produccionRedondeada+" kWh"
 
 coberturaSistema.innerText="Cobertura del consumo "+coberturaConsumo.toFixed(0)+"%"
 
-areaSistemaTexto.innerText="Área requerida aproximada "+areaSistema.toFixed(1)+" m²"
+areaSistemaTexto.innerText="Ãrea requerida aproximada "+areaSistema.toFixed(1)+" mÂ²"
 
 ahorroMensual.innerText="Ahorro mensual estimado $"+ahorroRedondeado
 
-retorno.innerText="Retorno estimado "+Math.round(retorno)+" años"
+retorno.innerText="Retorno estimado "+Math.round(retorno)+" aÃ±os"
 
-precioFinal.innerText="Inversión $"+precioSistema.toFixed(0)
+precioFinal.innerText="InversiÃ³n $"+precioSistema.toFixed(0)
 
 generarGrafica()
 
@@ -621,7 +638,7 @@ nextScreen()
 
 function generarGrafica(){
 
-let años=[]
+let anos=[]
 let ahorro=[]
 let inversion=[]
 
@@ -632,7 +649,7 @@ produccionAnual*Math.pow(1-DEGRADACION_PANEL,i)
 
 let ahorroAnual = produccionDegradada*costoKWH
 
-años.push(i)
+anos.push(i)
 
 ahorro.push((ahorroAnual*i)-precioSistema)
 
@@ -643,10 +660,10 @@ inversion.push(precioSistema)
 new Chart(graficaROI,{
 type:'line',
 data:{
-labels:años,
+labels:anos,
 datasets:[
 {label:'Ahorro acumulado',data:ahorro,borderColor:'#00ff88'},
-{label:'Inversión',data:inversion,borderColor:'#ff4444'}
+{label:'InversiÃ³n',data:inversion,borderColor:'#ff4444'}
 ]
 }
 })
@@ -656,25 +673,190 @@ datasets:[
 
 /* QR */
 
+
+
 function generarQR(){
 
-let textoQR =
-"Construye Más Energías Limpias\n"+
-"Folio: "+folioCotizacion+"\n"+
-"Cliente: "+nombre.value+"\n"+
-panelFinal.innerText+"\n"+
-precioFinal.innerText
+let cliente = (nombre.value||"").trim()
+if(cliente.length>40) cliente = cliente.slice(0,40)
 
-document.getElementById("qr").innerHTML=""
+let link = (typeof pdfLink !== "undefined" ? (pdfLink.value||"") : "").trim()
+let textoQR = link ? link :
+"CM-EL\n"+
+"Folio: "+(folioCotizacion||"")+"\n"+
+"Cliente: "+cliente+"\n"+
+"Total: "+formatMoney(precioSistema)
 
-new QRCode(document.getElementById("qr"),{
+let qrEl = document.getElementById("qr")
+qrEl.innerHTML=""
+
+try{
+new QRCode(qrEl,{
 text:textoQR,
 width:120,
 height:120
 })
+}catch(e){
+let fallback = link ? link.slice(0,120) : "Folio: "+(folioCotizacion||"")
+qrEl.innerHTML=""
+new QRCode(qrEl,{
+text:fallback,
+width:120,
+height:120
+})
+}
 
 }
 
+if(typeof pdfLink !== "undefined"){
+pdfLink.addEventListener("input",()=>{
+if(screens[currentIndex]==="reporte"){
+generarQR()
+}
+})
+}
+function formatMoney(value){
+let n=Number(value||0)
+let sign=n<0?"-":""
+n=Math.abs(n)
+let intPart=Math.floor(n)
+let dec=Math.round((n-intPart)*100)
+if(dec===100){
+intPart+=1
+dec=0
+}
+let s=intPart.toString()
+let groups=[]
+while(s.length>3){
+groups.unshift(s.slice(-3))
+s=s.slice(0,-3)
+}
+groups.unshift(s)
+let formatted=groups.join(",")
+if(groups.length>2){
+let idx=formatted.indexOf(",")
+formatted=formatted.slice(0,idx)+"'"+formatted.slice(idx+1)
+}
+let decStr=dec.toString().padStart(2,"0")
+return sign+"$"+formatted+"."+decStr
+}
+
+function numeroALetras(num){
+num=Math.floor(Number(num||0))
+if(num===0) return "cero"
+if(num<0) return "menos "+numeroALetras(Math.abs(num))
+let words=""
+let millones=Math.floor(num/1000000)
+let miles=Math.floor((num%1000000)/1000)
+let cientos=num%1000
+if(millones>0){
+if(millones===1) words+="un millon"
+else words+=seccion(millones)+" millones"
+}
+if(miles>0){
+if(words) words+=" "
+if(miles===1) words+="mil"
+else words+=seccion(miles)+" mil"
+}
+if(cientos>0){
+if(words) words+=" "
+words+=seccion(cientos)
+}
+return words
+}
+
+function seccion(n){
+return centenas(n)
+}
+
+function centenas(n){
+if(n===0) return ""
+if(n===100) return "cien"
+let centenasArr=["","ciento","doscientos","trescientos","cuatrocientos","quinientos","seiscientos","setecientos","ochocientos","novecientos"]
+let c=Math.floor(n/100)
+let r=n%100
+let text=centenasArr[c]
+if(r>0){
+text+=(text?" ":"")+decenas(r)
+}
+return text
+}
+
+function decenas(n){
+if(n<10) return unidades(n)
+if(n>=10 && n<20){
+let especiales=["diez","once","doce","trece","catorce","quince","dieciseis","diecisiete","dieciocho","diecinueve"]
+return especiales[n-10]
+}
+if(n<30){
+if(n===20) return "veinte"
+return "veinti"+unidades(n-20)
+}
+let tensArr=["","","veinte","treinta","cuarenta","cincuenta","sesenta","setenta","ochenta","noventa"]
+let t=Math.floor(n/10)
+let u=n%10
+let text=tensArr[t]
+if(u>0) text+=" y "+unidades(u)
+return text
+}
+
+function unidades(n){
+let units=["","uno","dos","tres","cuatro","cinco","seis","siete","ocho","nueve"]
+return units[n]
+}
+
+function montoEnLetra(value){
+let n=Number(value||0)
+let intPart=Math.floor(Math.abs(n))
+let dec=Math.round((Math.abs(n)-intPart)*100)
+if(dec===100){
+intPart+=1
+dec=0
+}
+let decStr=dec.toString().padStart(2,"0")
+let letras=numeroALetras(intPart)
+if(letras==="") letras="cero"
+letras=letras.charAt(0).toUpperCase()+letras.slice(1)
+return "(Son: "+letras+" de pesos "+decStr+"/100 M.N.)"
+}
+
+function pdfText(doc,text,x,y,options){
+if(!text)return
+let size=10
+let align="left"
+if(options){
+if(options.size) size=options.size
+if(options.align) align=options.align
+}
+doc.setFontSize(size)
+doc.text(String(text),x,y,{align:align})
+}
+
+function pdfTextLines(doc,lines,x,y,lineHeight,size){
+if(!lines || !lines.length)return
+doc.setFontSize(size||9)
+let cursorY=y
+lines.forEach(line=>{
+doc.text(String(line),x,cursorY)
+cursorY+=lineHeight
+})
+}
+
+async function loadImageAsDataURL(url){
+try{
+let res=await fetch(url,{cache:"no-store"})
+if(!res.ok)return null
+let blob=await res.blob()
+return await new Promise(resolve=>{
+let reader=new FileReader()
+reader.onload=()=>resolve(reader.result)
+reader.onerror=()=>resolve(null)
+reader.readAsDataURL(blob)
+})
+}catch(e){
+return null
+}
+}
 
 /* REPORTE */
 
@@ -686,11 +868,11 @@ repCliente.innerText="Cliente "+nombre.value
 
 repConsumo.innerText="Consumo anual "+consumoAnual.toFixed(0)
 
-repDiagnostico.innerText="Diagnóstico "+diagnosticoTexto
+repDiagnostico.innerText="DiagnÃ³stico "+diagnosticoTexto
 
 repSistema.innerText=panelFinal.innerText
 
-repArea.innerText="Área requerida del sistema "+areaSistema.toFixed(1)+" m²"
+repArea.innerText="Ãrea requerida del sistema "+areaSistema.toFixed(1)+" mÂ²"
 
 repPrecio.innerText=precioFinal.innerText
 
@@ -701,33 +883,63 @@ generarQR()
 
 /* PDF */
 
-function generarPDF(){
+async function generarPDF(){
 
 const { jsPDF } = window.jspdf
 
-let doc=new jsPDF()
+generarQR()
 
-doc.text("Construye Más Energías Limpias",20,20)
+let doc=new jsPDF({orientation:"p",unit:"mm",format:"a4"})
 
-doc.text(repFolio.innerText,20,40)
-
-doc.text(repCliente.innerText,20,50)
-
-doc.text(repConsumo.innerText,20,60)
-
-doc.text(repDiagnostico.innerText,20,70)
-
-doc.text(repSistema.innerText,20,80)
-
-doc.text(repArea.innerText,20,90)
-
-doc.text(repPrecio.innerText,20,100)
-
-if(fotoReciboBase64){
-
-doc.addImage(fotoReciboBase64,"JPEG",20,120,170,90)
-
+let plantillaData = await loadImageAsDataURL(PDF_TEMPLATE_URL)
+if(plantillaData){
+doc.addImage(plantillaData,"PNG",0,0,PDF_PAGE.w,PDF_PAGE.h)
 }
+
+doc.setTextColor(20,20,20)
+
+let nombreCliente = (nombre.value||"").toUpperCase()
+let referencia = folioCotizacion || ""
+let folioAut = folioCotizacion || ""
+let montoTexto = formatMoney(precioSistema)
+let montoEnTexto = montoEnLetra(precioSistema)
+
+pdfText(doc,nombreCliente,PDF_LAYOUT.nombre.x,PDF_LAYOUT.nombre.y,PDF_LAYOUT.nombre)
+pdfText(doc,montoTexto,PDF_LAYOUT.monto.x,PDF_LAYOUT.monto.y,PDF_LAYOUT.monto)
+pdfText(doc,montoEnTexto,PDF_LAYOUT.montoTexto.x,PDF_LAYOUT.montoTexto.y,PDF_LAYOUT.montoTexto)
+pdfText(doc,referencia,PDF_LAYOUT.referencia.x,PDF_LAYOUT.referencia.y,PDF_LAYOUT.referencia)
+pdfText(doc,folioAut,PDF_LAYOUT.folioAut.x,PDF_LAYOUT.folioAut.y,PDF_LAYOUT.folioAut)
+let reporteCol1 = [
+"Cliente: "+(nombre.value||""),
+"Telefono: "+(telefono.value||""),
+"Calle: "+(calle.value||"")+" "+(numero.value||""),
+"Colonia: "+(colonia.value||""),
+"CP: "+(cp.value||""),
+"Ciudad: "+(ciudad.value||""),
+"Consumo bimestral: "+Number(consumoBimestral||0).toFixed(0)+" kWh",
+"Pago bimestral: "+formatMoney(pagoBimestral)
+]
+
+let produccionRedondeada = Math.round((produccionAnual||0)/100)*100
+let retornoCalc = precioSistema && ahorroMensualGlobal ? Math.round(precioSistema/(ahorroMensualGlobal*12)) : 0
+
+let reporteCol2 = [
+"Consumo anual: "+Number(consumoAnual||0).toFixed(0)+" kWh",
+"Radiacion: "+(radiacionSolar||0)+" kWh/kW/ano",
+"Diagnostico: "+(diagnosticoTexto||""),
+"Sistema: "+Number(sistemaKW||0).toFixed(1)+" kW",
+"Paneles: "+(panelFinal ? panelFinal.innerText : ""),
+"Produccion anual: "+produccionRedondeada+" kWh",
+"Cobertura: "+Number(coberturaConsumo||0).toFixed(0)+"%",
+"Area: "+Number(areaSistema||0).toFixed(1)+" m2",
+"Ahorro mensual: "+formatMoney(ahorroMensualGlobal),
+"Retorno: "+retornoCalc+" anos",
+"Punto equilibrio: "+retornoCalc+" anos",
+"Precio sistema: "+formatMoney(precioSistema)
+]
+
+pdfTextLines(doc,reporteCol1,PDF_REPORT.col1X,PDF_REPORT.startY,PDF_REPORT.lineHeight,PDF_REPORT.size)
+pdfTextLines(doc,reporteCol2,PDF_REPORT.col2X,PDF_REPORT.startY,PDF_REPORT.lineHeight,PDF_REPORT.size)
 
 let qrCanvas = document.querySelector("#qr canvas")
 
@@ -735,7 +947,15 @@ if(qrCanvas){
 
 let qrImg = qrCanvas.toDataURL("image/png")
 
-doc.addImage(qrImg,"PNG",150,230,40,40)
+doc.setFillColor(255,255,255)
+doc.rect(PDF_LAYOUT.qr.x,PDF_LAYOUT.qr.y,PDF_LAYOUT.qr.size,PDF_LAYOUT.qr.size,"F")
+doc.addImage(qrImg,"PNG",PDF_LAYOUT.qr.x,PDF_LAYOUT.qr.y,PDF_LAYOUT.qr.size,PDF_LAYOUT.qr.size)
+
+}
+
+if(PDF_SHOW_RECIBO && fotoReciboBase64){
+
+doc.addImage(fotoReciboBase64,"JPEG",20,120,170,90)
 
 }
 
@@ -744,9 +964,12 @@ doc.save("cotizacion-"+folioCotizacion+".pdf")
 }
 
 
+
 /* WHATSAPP */
 
-function enviarWhatsApp(){
+async function enviarWhatsApp(){
+
+await generarPDF()
 
 let telefonoCliente = telefono.value.replace(/\D/g,'')
 
@@ -754,7 +977,8 @@ let mensaje =
 "*Construye Más – Energías Limpias*%0A"+
 "Folio: "+folioCotizacion+"%0A"+
 repSistema.innerText+"%0A"+
-repPrecio.innerText
+repPrecio.innerText+"%0A"+
+"PDF descargado para adjuntar."
 
 let url = "https://wa.me/52"+telefonoCliente+"?text="+mensaje
 
@@ -805,8 +1029,8 @@ dragging=false
 
 })
 
-})
 
+})
 
 setTimeout(()=>{nextScreen()},2000)
 
