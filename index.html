@@ -12,7 +12,7 @@
 
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 
-<title>Construye Más â€“ Energí­as Limpias</title>
+<title>Construye Más Energí­as Limpias</title>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
@@ -258,12 +258,12 @@ background-position:center;
 <div class="screen" id="cliente">
 <div class="content">
 
-<input id="nombre" placeholder="Nombre del cliente">
-<input id="telefono" placeholder="TelÃ©fono">
+<input id="nombre" placeholder="Nombre del Cliente">
+<input id="telefono" placeholder="Teléfono">
 <input id="calle" placeholder="Calle">
-<input id="numero" placeholder="NÃºmero">
+<input id="numero" placeholder="Número">
 <input id="colonia" placeholder="Colonia">
-<input id="cp" placeholder="CÃ³digo Postal">
+<input id="cp" placeholder="Código Postal">
 <input id="ciudad" placeholder="Ciudad">
 
 <div class="slider-container">
@@ -433,7 +433,7 @@ folioAut: { x: 105, y: 214, size: 11, align: "center" },
 qr: { x: 20, y: 235, size: 40 }
 }
 const PDF_SHOW_RECIBO = false
-const PDF_REPORT = { col1X: 20, col2X: 115, startY: 140, lineHeight: 5.5, size: 8 }
+const PDF_REPORT = { col1X: 20, col2X: 115, startY: 100, lineHeight: 5.5, size: 8 }
 
 /* NAVEGACION */
 
@@ -493,9 +493,9 @@ function calcularRadiacion(){
 
 let ciudadUsuario = ciudad.value.toLowerCase()
 
-if(ciudadUsuario.includes("durango")) radiacionSolar = 1650
-else if(ciudadUsuario.includes("chihuahua")) radiacionSolar = 1750
-else if(ciudadUsuario.includes("hermosillo")) radiacionSolar = 1850
+if(ciudadUsuario.includes("Durango")) radiacionSolar = 1650
+else if(ciudadUsuario.includes("Chihuahua")) radiacionSolar = 1750
+else if(ciudadUsuario.includes("Hermosillo")) radiacionSolar = 1850
 else radiacionSolar = 1600
 
 }
@@ -523,7 +523,7 @@ resultadoSistema.innerText="Sistema recomendado "+sistemaKW.toFixed(1)+" kW"
 
 consumoAnualTexto.innerText="Consumo anual "+consumoAnual.toFixed(0)+" kWh"
 
-radiacionZona.innerText="RadiaciÃ³n estimada "+radiacionSolar+" kWh/kW/aÃ±o"
+radiacionZona.innerText="Radiación estimada "+radiacionSolar+" kWh/kW/año"
 
 eficienciaSistema.innerText="Eficiencia sistema "+(EFICIENCIA_SISTEMA*100)+"%"
 
@@ -615,17 +615,17 @@ let ahorroRedondeado = Math.round(ahorroMensualGlobal/50)*50
 
 panelFinal.innerText="Paneles "+paneles
 
-produccionSistema.innerText="ProducciÃ³n anual aproximada "+produccionRedondeada+" kWh"
+produccionSistema.innerText="Producción anual aproximada "+produccionRedondeada+" kWh"
 
 coberturaSistema.innerText="Cobertura del consumo "+coberturaConsumo.toFixed(0)+"%"
 
-areaSistemaTexto.innerText="Ãrea requerida aproximada "+areaSistema.toFixed(1)+" mÂ²"
+areaSistemaTexto.innerText="Área requerida aproximada "+areaSistema.toFixed(1)+"M2"
 
 ahorroMensual.innerText="Ahorro mensual estimado $"+ahorroRedondeado
 
-retorno.innerText="Retorno estimado "+Math.round(retorno)+" aÃ±os"
+retorno.innerText="Retorno estimado "+Math.round(retorno)+" años"
 
-precioFinal.innerText="InversiÃ³n $"+precioSistema.toFixed(0)
+precioFinal.innerText="Inversión $"+precioSistema.toFixed(0)
 
 generarGrafica()
 
@@ -663,7 +663,7 @@ data:{
 labels:anos,
 datasets:[
 {label:'Ahorro acumulado',data:ahorro,borderColor:'#00ff88'},
-{label:'InversiÃ³n',data:inversion,borderColor:'#ff4444'}
+{label:'Inversión',data:inversion,borderColor:'#ff4444'}
 ]
 }
 })
@@ -864,15 +864,15 @@ function llenarReporte(){
 
 repFolio.innerText="Folio: "+folioCotizacion
 
-repCliente.innerText="Cliente "+nombre.value
+repCliente.innerText="Cliente: "+nombre.value
 
-repConsumo.innerText="Consumo anual "+consumoAnual.toFixed(0)
+repConsumo.innerText="Consumo anual: "+consumoAnual.toFixed(0)
 
-repDiagnostico.innerText="DiagnÃ³stico "+diagnosticoTexto
+repDiagnostico.innerText="Diagnóstico: "+diagnosticoTexto
 
 repSistema.innerText=panelFinal.innerText
 
-repArea.innerText="Ãrea requerida del sistema "+areaSistema.toFixed(1)+" mÂ²"
+repArea.innerText="Área requerida del sistema: "+areaSistema.toFixed(1)+" M2"
 
 repPrecio.innerText=precioFinal.innerText
 
@@ -913,7 +913,7 @@ let reporteCol1 = [
 "Cliente: "+(nombre.value||""),
 "Telefono: "+(telefono.value||""),
 "Calle: "+(calle.value||"")+" "+(numero.value||""),
-"Colonia: "+(colonia.value||""),
+"Colonia o Fracc.: "+(colonia.value||""),
 "CP: "+(cp.value||""),
 "Ciudad: "+(ciudad.value||""),
 "Consumo bimestral: "+Number(consumoBimestral||0).toFixed(0)+" kWh",
@@ -925,16 +925,16 @@ let retornoCalc = precioSistema && ahorroMensualGlobal ? Math.round(precioSistem
 
 let reporteCol2 = [
 "Consumo anual: "+Number(consumoAnual||0).toFixed(0)+" kWh",
-"Radiacion: "+(radiacionSolar||0)+" kWh/kW/ano",
+"Radiacion: "+(radiacionSolar||0)+" kWh/kW/Año",
 "Diagnostico: "+(diagnosticoTexto||""),
 "Sistema: "+Number(sistemaKW||0).toFixed(1)+" kW",
 "Paneles: "+(panelFinal ? panelFinal.innerText : ""),
 "Produccion anual: "+produccionRedondeada+" kWh",
 "Cobertura: "+Number(coberturaConsumo||0).toFixed(0)+"%",
-"Area: "+Number(areaSistema||0).toFixed(1)+" m2",
+"Area: "+Number(areaSistema||0).toFixed(1)+" M2",
 "Ahorro mensual: "+formatMoney(ahorroMensualGlobal),
-"Retorno: "+retornoCalc+" anos",
-"Punto equilibrio: "+retornoCalc+" anos",
+"Retorno: "+retornoCalc+" Años",
+"Punto equilibrio: "+retornoCalc+" Años",
 "Precio sistema: "+formatMoney(precioSistema)
 ]
 
