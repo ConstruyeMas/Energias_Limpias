@@ -17,6 +17,7 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script src="https://accounts.google.com/gsi/client" async defer></script>
 
 <style>
 
@@ -283,9 +284,9 @@ background-position:center;
 <input id="consumo" placeholder="Consumo bimestral kWh">
 <input id="pago" placeholder="Pago bimestral $">
 
-<input type="file" accept="image/*" id="fotoInput">
 
-<img id="previewFoto" style="max-width:100%;margin-top:10px">
+
+
 
 <div class="slider-container">
 <div class="slider-track">
@@ -416,8 +417,13 @@ let precioSistema
 let radiacionSolar
 let diagnosticoTexto
 let folioCotizacion
+let pdfLinkValue = ""
 
-let fotoReciboBase64
+const DRIVE_CLIENT_ID = "329925517865-jgmugq1egglghkirrej6ljlaafomm5t4.apps.googleusercontent.com"
+const DRIVE_SCOPES = "https://www.googleapis.com/auth/drive.file"
+let driveTokenClient
+let driveAccessToken = ""
+let driveFileId = ""
 
 const EFICIENCIA_SISTEMA = 0.85
 const DEGRADACION_PANEL = 0.005
@@ -425,15 +431,15 @@ const DEGRADACION_PANEL = 0.005
 const PDF_TEMPLATE_URL = "assets/plantilla.png"
 const PDF_PAGE = { w: 210, h: 297 }
 const PDF_LAYOUT = {
-nombre: { x: 195, y: 48, size: 10, align: "right" },
-monto: { x: 105, y: 120, size: 18, align: "center" },
-montoTexto: { x: 105, y: 128, size: 8, align: "center" },
-referencia: { x: 105, y: 190, size: 14, align: "center" },
-folioAut: { x: 105, y: 214, size: 11, align: "center" },
-qr: { x: 20, y: 235, size: 40 }
+idTexto: { x: 158, y: 24.2, size: 12, align: "left" },
+fechaHora: { x: 140, y: 37.5, size: 10, align: "left" },
+monto: { x: 195, y: 205, size: 18, align: "right" },
+montoTexto: { x: 195, y: 213, size: 10.5, align: "right" },
+folioAut: { x: 12, y: 204, size: 15, align: "left" },
+qr: { x: 20, y: 223, size: 40 }
 }
-const PDF_SHOW_RECIBO = false
-const PDF_REPORT = { col1X: 20, col2X: 115, startY: 100, lineHeight: 5.5, size: 8 }
+
+const PDF_REPORT = { col1X: 20, col2X: 145, startY: 66, lineHeight: 5.8, size: 11 }
 
 /* NAVEGACION */
 
@@ -467,25 +473,9 @@ if(currentIndex>=screens.length)return
 goTo(screens[currentIndex])
 
 if(screens[currentIndex]==="analisis") calcularSistema()
-if(screens[currentIndex]==="reporte") llenarReporte()
+if(screens[currentIndex]==="reporte") window.llenarReporte()
 
 }
-
-/* FOTO RECIBO */
-
-fotoInput.addEventListener("change",function(){
-
-let reader=new FileReader()
-
-reader.onload=e=>{
-fotoReciboBase64 = e.target.result
-previewFoto.src = fotoReciboBase64
-}
-
-reader.readAsDataURL(this.files[0])
-
-})
-
 
 /* RADIACION */
 
@@ -680,7 +670,10 @@ function generarQR(){
 let cliente = (nombre.value||"").trim()
 if(cliente.length>40) cliente = cliente.slice(0,40)
 
-let link = (typeof pdfLink !== "undefined" ? (pdfLink.value||"") : "").trim()
+let link = (pdfLinkValue||"").trim()
+if(!link){
+link = (typeof pdfLink !== "undefined" ? (pdfLink.value||"") : "").trim()
+}
 let textoQR = link ? link :
 "CM-EL\n"+
 "Folio: "+(folioCotizacion||"")+"\n"+
@@ -820,6 +813,110 @@ letras=letras.charAt(0).toUpperCase()+letras.slice(1)
 return "(Son: "+letras+" de pesos "+decStr+"/100 M.N.)"
 }
 
+function formatFechaHora(dt){
+let dias=["domingo","lunes","martes","miércoles","jueves","viernes","sábado"]
+let meses=["enero","febrero","marzo","abril","mayo","junio","julio","agosto","septiembre","octubre","noviembre","diciembre"]
+let d=dt.getDay()
+let day=dt.getDate()
+let month=dt.getMonth()
+let year=dt.getFullYear()
+let hh=String(dt.getHours()).padStart(2,"0")
+let mm=String(dt.getMinutes()).padStart(2,"0")
+let diaTxt=dias[d].charAt(0).toUpperCase()+dias[d].slice(1)
+let mesTxt=meses[month].charAt(0).toUpperCase()+meses[month].slice(1)
+return diaTxt+", "+day+" de "+mesTxt+" de "+year+" "+hh+":"+mm+" hrs."
+}
+
+function initDrive(){
+if(!window.google || !google.accounts || !google.accounts.oauth2) return
+if(driveTokenClient) return
+if(!DRIVE_CLIENT_ID || DRIVE_CLIENT_ID.indexOf("TU_CLIENT_ID")>=0) return
+
+driveTokenClient = google.accounts.oauth2.initTokenClient({
+client_id: DRIVE_CLIENT_ID,
+scope: DRIVE_SCOPES,
+callback: (resp)=>{
+if(resp && resp.access_token){
+driveAccessToken = resp.access_token
+}
+}
+})
+}
+
+function ensureDriveToken(){
+return new Promise((resolve,reject)=>{
+if(!DRIVE_CLIENT_ID || DRIVE_CLIENT_ID.indexOf("TU_CLIENT_ID")>=0){
+return reject(new Error("DRIVE_CLIENT_ID no configurado"))
+}
+if(driveAccessToken){
+return resolve(driveAccessToken)
+}
+if(!window.google || !google.accounts || !google.accounts.oauth2){
+return reject(new Error("Google Identity Services no cargado"))
+}
+initDrive()
+if(!driveTokenClient){
+return reject(new Error("Token client no inicializado"))
+}
+
+driveTokenClient.callback = (resp)=>{
+if(resp.error){
+reject(resp)
+}else{
+driveAccessToken = resp.access_token
+resolve(driveAccessToken)
+}
+}
+
+driveTokenClient.requestAccessToken({prompt:"consent"})
+})
+}
+
+async function createDriveFile(fileName){
+let token = await ensureDriveToken()
+let res = await fetch("https://www.googleapis.com/drive/v3/files",{
+method:"POST",
+headers:{
+Authorization:"Bearer "+token,
+"Content-Type":"application/json"
+},
+body: JSON.stringify({name:fileName,mimeType:"application/pdf"})
+})
+if(!res.ok) throw new Error("No se pudo crear el archivo en Drive")
+let data = await res.json()
+return data.id
+}
+
+async function uploadDriveContent(fileId, blob){
+let token = await ensureDriveToken()
+let res = await fetch("https://www.googleapis.com/upload/drive/v3/files/"+fileId+"?uploadType=media",{
+method:"PATCH",
+headers:{
+Authorization:"Bearer "+token,
+"Content-Type":"application/pdf"
+},
+body: blob
+})
+if(!res.ok) throw new Error("No se pudo subir el PDF a Drive")
+}
+
+async function setDrivePublic(fileId){
+let token = await ensureDriveToken()
+let res = await fetch("https://www.googleapis.com/drive/v3/files/"+fileId+"/permissions",{
+method:"POST",
+headers:{
+Authorization:"Bearer "+token,
+"Content-Type":"application/json"
+},
+body: JSON.stringify({role:"reader",type:"anyone"})
+})
+if(!res.ok) throw new Error("No se pudo publicar el archivo")
+}
+
+function buildDriveLink(fileId){
+return "https://drive.google.com/file/d/"+fileId+"/view?usp=sharing"
+}
+
 function pdfText(doc,text,x,y,options){
 if(!text)return
 let size=10
@@ -830,6 +927,28 @@ if(options.align) align=options.align
 }
 doc.setFontSize(size)
 doc.text(String(text),x,y,{align:align})
+}
+
+function pdfTextLabelValueBlock(doc,label,value,x,y,lineHeight,options){
+if(!label)return
+let sizeLabel=11.5
+let sizeValue=10.5
+let labelColor=[20,20,20]
+let valueColor=[0,102,204]
+if(options){
+if(options.sizeLabel) sizeLabel=options.sizeLabel
+if(options.sizeValue) sizeValue=options.sizeValue
+if(options.labelColor) labelColor=options.labelColor
+if(options.valueColor) valueColor=options.valueColor
+}
+doc.setFont("helvetica","bold")
+doc.setFontSize(sizeLabel)
+doc.setTextColor(labelColor[0],labelColor[1],labelColor[2])
+doc.text(String(label),x,y)
+doc.setFont("helvetica","normal")
+doc.setFontSize(sizeValue)
+doc.setTextColor(valueColor[0],valueColor[1],valueColor[2])
+doc.text(String(value),x,y+lineHeight-1)
 }
 
 function pdfTextLines(doc,lines,x,y,lineHeight,size){
@@ -858,9 +977,24 @@ return null
 }
 }
 
+function canvasToWhiteDataURL(canvas){
+try{
+let temp = document.createElement("canvas")
+temp.width = canvas.width
+temp.height = canvas.height
+let ctx = temp.getContext("2d")
+ctx.fillStyle = "#FFFFFF"
+ctx.fillRect(0,0,temp.width,temp.height)
+ctx.drawImage(canvas,0,0)
+return temp.toDataURL("image/png")
+}catch(e){
+return null
+}
+}
+
 /* REPORTE */
 
-function llenarReporte(){
+window.llenarReporte = function(){
 
 repFolio.innerText="Folio: "+folioCotizacion
 
@@ -898,48 +1032,79 @@ doc.addImage(plantillaData,"PNG",0,0,PDF_PAGE.w,PDF_PAGE.h)
 
 doc.setTextColor(20,20,20)
 
-let nombreCliente = (nombre.value||"").toUpperCase()
-let referencia = folioCotizacion || ""
 let folioAut = folioCotizacion || ""
 let montoTexto = formatMoney(precioSistema)
-let montoEnTexto = montoEnLetra(precioSistema)
+let montoEnTexto = montoEnLetra(precioSistema).toUpperCase()
+let idTexto = folioCotizacion || ""
+let fechaHoraTexto = formatFechaHora(new Date())
 
-pdfText(doc,nombreCliente,PDF_LAYOUT.nombre.x,PDF_LAYOUT.nombre.y,PDF_LAYOUT.nombre)
+// ID y Fecha/Hora (arriba derecha)
+doc.setFont("helvetica","bold")
+doc.setTextColor(0,102,204)
+pdfText(doc,idTexto,PDF_LAYOUT.idTexto.x,PDF_LAYOUT.idTexto.y,PDF_LAYOUT.idTexto)
+doc.setFont("helvetica","bold")
+doc.setTextColor(0,102,204)
+pdfText(doc,fechaHoraTexto,PDF_LAYOUT.fechaHora.x,PDF_LAYOUT.fechaHora.y,PDF_LAYOUT.fechaHora)
+doc.setFont("helvetica","normal")
+doc.setTextColor(20,20,20)
+
+// Monto (abajo derecha)
+doc.setFont("helvetica","bold")
+doc.setTextColor(0,102,204)
 pdfText(doc,montoTexto,PDF_LAYOUT.monto.x,PDF_LAYOUT.monto.y,PDF_LAYOUT.monto)
+doc.setFont("helvetica","normal")
+doc.setTextColor(20,20,20)
 pdfText(doc,montoEnTexto,PDF_LAYOUT.montoTexto.x,PDF_LAYOUT.montoTexto.y,PDF_LAYOUT.montoTexto)
-pdfText(doc,referencia,PDF_LAYOUT.referencia.x,PDF_LAYOUT.referencia.y,PDF_LAYOUT.referencia)
+
+// Folio (abajo izquierda)
+doc.setFont("helvetica","bold")
+doc.setTextColor(0,102,204)
 pdfText(doc,folioAut,PDF_LAYOUT.folioAut.x,PDF_LAYOUT.folioAut.y,PDF_LAYOUT.folioAut)
+doc.setFont("helvetica","normal")
+doc.setTextColor(20,20,20)
+
 let reporteCol1 = [
-"Cliente: "+(nombre.value||""),
-"Telefono: "+(telefono.value||""),
-"Calle: "+(calle.value||"")+" "+(numero.value||""),
-"Colonia o Fracc.: "+(colonia.value||""),
-"CP: "+(cp.value||""),
-"Ciudad: "+(ciudad.value||""),
-"Consumo bimestral: "+Number(consumoBimestral||0).toFixed(0)+" kWh",
-"Pago bimestral: "+formatMoney(pagoBimestral)
+{ label: "CLIENTE:", value: (nombre.value||"") },
+{ label: "TELÉFONO:", value: (telefono.value||"") },
+{ label: "CALLE:", value: (calle.value||"")+" "+(numero.value||"") },
+{ label: "COLONIA:", value: (colonia.value||"") },
+{ label: "C.P.:", value: (cp.value||"") },
+{ label: "CIUDAD:", value: (ciudad.value||"") },
+{ label: "CONSUMO BIMESTRAL:", value: Number(consumoBimestral||0).toFixed(0)+" kWh" },
+{ label: "PAGO BIMESTRAL:", value: formatMoney(pagoBimestral) }
 ]
 
 let produccionRedondeada = Math.round((produccionAnual||0)/100)*100
 let retornoCalc = precioSistema && ahorroMensualGlobal ? Math.round(precioSistema/(ahorroMensualGlobal*12)) : 0
 
 let reporteCol2 = [
-"Consumo anual: "+Number(consumoAnual||0).toFixed(0)+" kWh",
-"Radiacion: "+(radiacionSolar||0)+" kWh/kW/Año",
-"Diagnostico: "+(diagnosticoTexto||""),
-"Sistema: "+Number(sistemaKW||0).toFixed(1)+" kW",
-"Paneles: "+(panelFinal ? panelFinal.innerText : ""),
-"Produccion anual: "+produccionRedondeada+" kWh",
-"Cobertura: "+Number(coberturaConsumo||0).toFixed(0)+"%",
-"Area: "+Number(areaSistema||0).toFixed(1)+" M2",
-"Ahorro mensual: "+formatMoney(ahorroMensualGlobal),
-"Retorno: "+retornoCalc+" Años",
-"Punto equilibrio: "+retornoCalc+" Años",
-"Precio sistema: "+formatMoney(precioSistema)
+{ label: "CONSUMO ANUAL:", value: Number(consumoAnual||0).toFixed(0)+" kWh" },
+{ label: "RADIACIÓN:", value: (radiacionSolar||0)+" kWh/kW/año" },
+{ label: "DIAGNÓSTICO:", value: (diagnosticoTexto||"") },
+{ label: "SISTEMA:", value: Number(sistemaKW||0).toFixed(1)+" kW" },
+{ label: "PANELES:", value: (panelFinal ? panelFinal.innerText : "") },
+{ label: "PRODUCCIÓN ANUAL:", value: produccionRedondeada+" kWh" },
+{ label: "COBERTURA:", value: Number(coberturaConsumo||0).toFixed(0)+"%" },
+{ label: "ÁREA:", value: Number(areaSistema||0).toFixed(1)+" m²" },
+{ label: "AHORRO MENSUAL:", value: formatMoney(ahorroMensualGlobal) },
+{ label: "PUNTO DE EQUILIBRIO:", value: retornoCalc+" años" }
 ]
 
-pdfTextLines(doc,reporteCol1,PDF_REPORT.col1X,PDF_REPORT.startY,PDF_REPORT.lineHeight,PDF_REPORT.size)
-pdfTextLines(doc,reporteCol2,PDF_REPORT.col2X,PDF_REPORT.startY,PDF_REPORT.lineHeight,PDF_REPORT.size)
+let cursorY = PDF_REPORT.startY
+reporteCol1.forEach(item=>{
+let label = String(item.label||"").toUpperCase()
+let value = String(item.value||"").toUpperCase()
+pdfTextLabelValueBlock(doc,label,value,PDF_REPORT.col1X,cursorY,PDF_REPORT.lineHeight)
+cursorY += PDF_REPORT.lineHeight*1.6
+})
+
+let cursorY2 = PDF_REPORT.startY
+reporteCol2.forEach(item=>{
+let label = String(item.label||"").toUpperCase()
+let value = String(item.value||"").toUpperCase()
+pdfTextLabelValueBlock(doc,label,value,PDF_REPORT.col2X,cursorY2,PDF_REPORT.lineHeight)
+cursorY2 += PDF_REPORT.lineHeight*1.6
+})
 
 let qrCanvas = document.querySelector("#qr canvas")
 
@@ -951,19 +1116,36 @@ doc.setFillColor(255,255,255)
 doc.rect(PDF_LAYOUT.qr.x,PDF_LAYOUT.qr.y,PDF_LAYOUT.qr.size,PDF_LAYOUT.qr.size,"F")
 doc.addImage(qrImg,"PNG",PDF_LAYOUT.qr.x,PDF_LAYOUT.qr.y,PDF_LAYOUT.qr.size,PDF_LAYOUT.qr.size)
 
+let chartCanvas = document.getElementById("graficaROI")
+if(chartCanvas){
+let chartImg = canvasToWhiteDataURL(chartCanvas) || chartCanvas.toDataURL("image/png")
+if(chartImg){
+let chartW = 60
+let ratio = chartCanvas.height && chartCanvas.width ? (chartCanvas.height/chartCanvas.width) : 0.5
+let chartH = chartW * ratio
+let chartX = PDF_LAYOUT.qr.x + PDF_LAYOUT.qr.size + 10
+let chartY = PDF_LAYOUT.qr.y + (PDF_LAYOUT.qr.size - chartH)/2
+if(chartX + chartW > PDF_PAGE.w - 10){
+chartX = PDF_PAGE.w - 10 - chartW
+}
+doc.addImage(chartImg,"PNG",chartX,chartY,chartW,chartH)
+}
 }
 
-if(PDF_SHOW_RECIBO && fotoReciboBase64){
+}
 
-doc.addImage(fotoReciboBase64,"JPEG",20,120,170,90)
-
+if(driveFileId){
+try{
+let pdfBlob = doc.output("blob")
+await uploadDriveContent(driveFileId, pdfBlob)
+}catch(e){
+console.warn("Drive upload:",e)
+}
 }
 
 doc.save("cotizacion-"+folioCotizacion+".pdf")
 
 }
-
-
 
 /* WHATSAPP */
 
