@@ -113,6 +113,30 @@ input[type=range]::-moz-range-thumb{
   font-size:10px;color:rgba(255,255,255,0.3);
   margin-top:2px;
 }
+.rdisp-compact{
+  font-size:22px;font-weight:700;color:#fff;
+  text-align:left;letter-spacing:-0.6px;margin-bottom:2px;
+}
+.rdisp-compact span{font-size:12px;font-weight:400;color:rgba(255,255,255,0.4);margin-left:3px}
+.mode-row{
+  display:flex;align-items:flex-start;justify-content:space-between;gap:10px;
+}
+.mode-pill{
+  flex-shrink:0;
+  padding:7px 10px;
+  border-radius:999px;
+  border:1px solid rgba(255,255,255,0.14);
+  background:rgba(255,255,255,0.05);
+  color:rgba(255,255,255,0.62);
+  font-size:10px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;
+}
+.mode-pill.active{
+  background:rgba(26,138,69,0.18);
+  border-color:rgba(125,255,179,0.28);
+  color:#c6ffd9;
+}
+.annual-grid{gap:10px;margin:12px 0 6px}
+.annual-note{font-size:12px;font-weight:600;color:#fff;margin-top:4px}
 
 /* ── PANEL OPTIONS ── */
 .popt{
@@ -203,7 +227,10 @@ button:active{transform:scale(.97)}
 .cat-row .cq{font-weight:700;color:#7dffb3;min-width:80px;text-align:right}
 .cat-row .cu{color:rgba(255,255,255,0.3);font-size:10px;min-width:38px;text-align:right;margin-left:5px}
 .cat-folio{font-size:10px;color:rgba(255,255,255,0.3);margin-top:10px;text-align:center}
-#closeCat{margin-top:18px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.2);color:#fff;font-size:13px;padding:9px 22px;border-radius:4px;cursor:pointer}
+.cat-actions{width:100%;max-width:440px;margin-top:14px}
+#catSave{margin-top:0}
+#catStatus{min-height:18px;margin-top:10px;font-size:12px;text-align:center;color:#bdf5c8}
+#closeCat{width:100%;margin-top:8px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.2);color:#fff;font-size:13px;padding:9px 22px;border-radius:4px;cursor:pointer}
 </style>
 </head>
 <body>
@@ -256,6 +283,30 @@ button:active{transform:scale(.97)}
       <div style="font-size:22px;font-weight:700;color:#fff" id="dTarifa">$3.00<span style="font-size:13px;font-weight:400;color:rgba(255,255,255,0.4);margin-left:3px">/kWh</span></div>
       <div class="ksub">Ajusta cualquiera de los dos sliders · el otro se actualiza solo</div>
     </div>
+
+    <div class="card" style="padding:14px 16px">
+      <div class="mode-row">
+        <div>
+          <span class="lbl">Promedio anual opcional</span>
+          <div class="ksub">Si tus recibos cambian por temporada, ajusta estos dos pagos</div>
+        </div>
+        <div class="mode-pill" id="avgModeChip">Modo actual</div>
+      </div>
+      <div class="g2 annual-grid">
+        <div>
+          <span class="lbl">Pago normal</span>
+          <div class="rdisp-compact" id="dPagoNormal">$900 <span>MXN</span></div>
+          <input type="range" id="slPagoNormal" min="100" max="15000" step="50" value="900">
+        </div>
+        <div>
+          <span class="lbl">Pago alto</span>
+          <div class="rdisp-compact" id="dPagoAlto">$900 <span>MXN</span></div>
+          <input type="range" id="slPagoAlto" min="100" max="15000" step="50" value="900">
+        </div>
+      </div>
+      <div class="annual-note" id="avgModeNote">Se usa el recibo actual para dimensionar.</div>
+      <div class="ksub" id="avgModeDetail">Tarifa actual: $3.00 /kWh</div>
+    </div>
   </div>
   <div class="nav-bar">
     <div class="nav-back" onclick="prevScreen()">←</div>
@@ -269,7 +320,7 @@ button:active{transform:scale(.97)}
   <div class="content">
     <div class="stitle">Diagnóstico energético</div>
     <div class="g2">
-      <div class="card"><span class="lbl">Consumo mensual</span><div class="kval" id="aConsM">—</div><div class="ksub">kWh</div></div>
+      <div class="card"><span class="lbl">Consumo mensual</span><div class="kval" id="aConsM">—</div><div class="ksub" id="aConsMSub">kWh/mes · recibo actual</div></div>
       <div class="card"><span class="lbl">Consumo anual</span><div class="kval" id="aConsA">—</div><div class="ksub">kWh</div></div>
     </div>
     <div class="g2">
@@ -335,6 +386,7 @@ button:active{transform:scale(.97)}
       <p id="rFolio"    style="font-size:10px;color:rgba(255,255,255,0.4);margin-bottom:6px"></p>
       <p id="rCliente"  style="font-size:15px;font-weight:700;margin-bottom:3px"></p>
       <p id="rConsumo"  style="font-size:12px;color:rgba(255,255,255,0.55)"></p>
+      <p id="rBase"     style="font-size:12px;color:rgba(255,255,255,0.55)"></p>
       <p id="rDiag"     style="font-size:12px;color:rgba(255,255,255,0.55)"></p>
       <p id="rSistema"  style="font-size:13px;font-weight:600;margin-top:7px"></p>
       <p id="rArea"     style="font-size:12px;color:rgba(255,255,255,0.55)"></p>
@@ -401,7 +453,11 @@ button:active{transform:scale(.97)}
   </div>
 
   <div class="cat-folio" id="catFol"></div>
-  <button id="closeCat" onclick="cerrarCatalogo()">Cerrar</button>
+  <div class="cat-actions">
+    <button class="btn-green" id="catSave" onclick="guardarPresupuesto()">Guardar presupuesto</button>
+    <div id="catStatus"></div>
+    <button id="closeCat" onclick="cerrarCatalogo()">Cerrar</button>
+  </div>
 </div>
 
 <script>
@@ -433,13 +489,18 @@ const SCREENS=['splash','cliente','recibo','analisis','paneles','cotizacion','re
 let consumoBi,pagoBi,consumoMes,consumoAnual,costoKWH,sistemaKW;
 let radiacionSolar,diagnosticoTexto,folioCotizacion;
 let produccionAnual,coberturaConsumo,areaSistema,ahorroMensualGlobal,precioSistema;
+let dimensionamientoPromedioAnual=false,pagoNormalBi=0,pagoAltoBi=0,consumoNormalBi=0,consumoAltoBi=0;
 let catPan=0,catPot=0;
+let catalogoActual=null;
 let pdfLinkValue='',pdfTmplData=null,pdfTmplLoading=null;
-let pdfLinkEl,driveStatusEl;
+let pdfLinkEl,driveStatusEl,catStatusEl;
 let driveTokenClient,driveAccessToken='',driveFileId='';
 let chartInst=null;
 let isLinkingSliders=false;
 const TARIFF_REF=3.0; // $/kWh referencia para vinculación
+const AVG_NORMAL_MONTHS=10;
+const AVG_PEAK_MONTHS=2;
+const GOOGLE_OAUTH_LOCAL_MSG='Debes ejecutar la app desde un servidor local (ej. Live Server)';
 
 /* ════════════════════════════════════════
    NAVIGATION
@@ -527,20 +588,85 @@ document.querySelectorAll('.sthumb').forEach(thumb=>{
 ════════════════════════════════════════ */
 const slCons=document.getElementById('slConsumo');
 const slPago=document.getElementById('slPago');
+const slPagoNormal=document.getElementById('slPagoNormal');
+const slPagoAlto=document.getElementById('slPagoAlto');
 const dCons =document.getElementById('dConsumo');
 const dPago =document.getElementById('dPago');
 const dTar  =document.getElementById('dTarifa');
+const dPagoNormal=document.getElementById('dPagoNormal');
+const dPagoAlto=document.getElementById('dPagoAlto');
+const avgModeChip=document.getElementById('avgModeChip');
+const avgModeNote=document.getElementById('avgModeNote');
+const avgModeDetail=document.getElementById('avgModeDetail');
+const aConsMSub=document.getElementById('aConsMSub');
 
 function fmtN(n){return Number(n).toLocaleString('es-MX')}
 
 function updConsumoDisplay(){ dCons.innerHTML=fmtN(slCons.value)+' <span>kWh</span>'; }
 function updPagoDisplay(){    dPago.innerHTML='$'+fmtN(slPago.value)+' <span>MXN</span>'; }
+function updPagoNormalDisplay(){ dPagoNormal.innerHTML='$'+fmtN(slPagoNormal.value)+' <span>MXN</span>'; }
+function updPagoAltoDisplay(){   dPagoAlto.innerHTML='$'+fmtN(slPagoAlto.value)+' <span>MXN</span>'; }
 function updTarifaDisplay(){
   const c=parseInt(slCons.value),p=parseInt(slPago.value);
   if(c>0) dTar.innerHTML='$'+(p/c).toFixed(2)+'<span style="font-size:13px;font-weight:400;color:rgba(255,255,255,0.4);margin-left:3px">/kWh</span>';
 }
+function refreshAverageModeState(){
+  dimensionamientoPromedioAnual=
+    parseInt(slPagoNormal.value)!==parseInt(slPago.value) ||
+    parseInt(slPagoAlto.value)!==parseInt(slPago.value);
+  return dimensionamientoPromedioAnual;
+}
+function calcAverageModeData(){
+  const consumoActual=Math.max(parseFloat(slCons.value)||0,1);
+  const pagoActual=parseFloat(slPago.value)||0;
+  const tarifa=pagoActual/consumoActual;
+  const pagoNormal=parseFloat(slPagoNormal.value)||0;
+  const pagoAlto=parseFloat(slPagoAlto.value)||0;
+  const consumoNormal=tarifa>0?pagoNormal/tarifa:0;
+  const consumoAlto=tarifa>0?pagoAlto/tarifa:0;
+  // Los pagos nuevos siguen siendo bimestrales; primero los llevamos a base mensual.
+  const consumoAnualProm=((consumoNormal/2)*AVG_NORMAL_MONTHS)+((consumoAlto/2)*AVG_PEAK_MONTHS);
+  const consumoMensualProm=consumoAnualProm/12;
+  return {tarifa,pagoNormal,pagoAlto,consumoNormal,consumoAlto,consumoAnualProm,consumoMensualProm};
+}
+function calcModeSummary(){
+  return dimensionamientoPromedioAnual
+    ? 'Promedio anual (10 meses normales / 2 meses pico)'
+    : 'Recibo actual';
+}
+function updateAverageModeUI(){
+  const avg=calcAverageModeData();
+  if(avgModeChip){
+    avgModeChip.textContent=dimensionamientoPromedioAnual?'Promedio anual':'Modo actual';
+    avgModeChip.classList.toggle('active',dimensionamientoPromedioAnual);
+  }
+  if(avgModeNote){
+    avgModeNote.textContent=dimensionamientoPromedioAnual
+      ? 'Dimensionamiento con promedio anual: 10 meses normales y 2 meses pico.'
+      : 'Se usa el recibo actual para dimensionar.';
+  }
+  if(avgModeDetail){
+    avgModeDetail.textContent=dimensionamientoPromedioAnual
+      ? 'Promedio mensual estimado: '+fmtN(Math.round(avg.consumoMensualProm))+' kWh/mes'
+      : 'Tarifa actual: $'+avg.tarifa.toFixed(2)+' /kWh';
+  }
+}
+function syncAverageInputs(force=false){
+  if(force||!dimensionamientoPromedioAnual){
+    slPagoNormal.value=slPago.value;
+    slPagoAlto.value=slPago.value;
+  }
+  updPagoNormalDisplay();
+  updPagoAltoDisplay();
+  refreshAverageModeState();
+  updateAverageModeUI();
+}
+function updateAnalysisModeUI(){
+  if(aConsMSub) aConsMSub.textContent=dimensionamientoPromedioAnual?'kWh/mes · promedio anual':'kWh/mes · recibo actual';
+}
 
 slCons.addEventListener('input',()=>{
+  const hadAverageMode=dimensionamientoPromedioAnual;
   updConsumoDisplay();
   if(!isLinkingSliders){
     isLinkingSliders=true;
@@ -549,8 +675,11 @@ slCons.addEventListener('input',()=>{
     isLinkingSliders=false;
   }
   updTarifaDisplay();
+  if(!hadAverageMode) syncAverageInputs(true);
+  else{refreshAverageModeState();updateAverageModeUI();}
 });
 slPago.addEventListener('input',()=>{
+  const hadAverageMode=dimensionamientoPromedioAnual;
   updPagoDisplay();
   if(!isLinkingSliders){
     isLinkingSliders=true;
@@ -559,6 +688,18 @@ slPago.addEventListener('input',()=>{
     isLinkingSliders=false;
   }
   updTarifaDisplay();
+  if(!hadAverageMode) syncAverageInputs(true);
+  else{refreshAverageModeState();updateAverageModeUI();}
+});
+slPagoNormal.addEventListener('input',()=>{
+  updPagoNormalDisplay();
+  refreshAverageModeState();
+  updateAverageModeUI();
+});
+slPagoAlto.addEventListener('input',()=>{
+  updPagoAltoDisplay();
+  refreshAverageModeState();
+  updateAverageModeUI();
 });
 
 /* ════════════════════════════════════════
@@ -581,17 +722,28 @@ function calcRadiacion(){
 ════════════════════════════════════════ */
 function calcularSistema(){
   calcRadiacion();
+  const avg=calcAverageModeData();
   consumoBi  = parseFloat(slCons.value);
   pagoBi     = parseFloat(slPago.value);
-  consumoMes  = consumoBi/2;
-  consumoAnual= consumoMes*12;
-  costoKWH    = pagoBi/consumoBi;
+  costoKWH    = avg.tarifa;
+  pagoNormalBi= avg.pagoNormal;
+  pagoAltoBi  = avg.pagoAlto;
+  consumoNormalBi=avg.consumoNormal;
+  consumoAltoBi  =avg.consumoAlto;
+  if(dimensionamientoPromedioAnual){
+    consumoAnual=avg.consumoAnualProm;
+    consumoMes  =avg.consumoMensualProm;
+  }else{
+    consumoMes  =consumoBi/2;
+    consumoAnual=consumoMes*12;
+  }
   sistemaKW   = consumoMes/150;
 
   document.getElementById('aConsM').textContent=consumoMes.toFixed(0);
   document.getElementById('aConsA').textContent=consumoAnual.toFixed(0);
   document.getElementById('aSist').textContent =sistemaKW.toFixed(1);
   document.getElementById('aRad').textContent  =radiacionSolar;
+  updateAnalysisModeUI();
 
   if(consumoAnual<4000)      diagnosticoTexto='Consumo normal';
   else if(consumoAnual<6000) diagnosticoTexto='Consumo elevado';
@@ -688,7 +840,8 @@ function generarGrafica(){
 function llenarReporte(){
   document.getElementById('rFolio').textContent  ='Folio: '+folioCotizacion;
   document.getElementById('rCliente').textContent=document.getElementById('nombre').value;
-  document.getElementById('rConsumo').textContent='Consumo anual: '+consumoAnual.toFixed(0)+' kWh';
+  document.getElementById('rConsumo').textContent='Consumo anual estimado: '+consumoAnual.toFixed(0)+' kWh · Promedio mensual: '+consumoMes.toFixed(0)+' kWh';
+  document.getElementById('rBase').textContent   ='Base de cálculo: '+calcModeSummary();
   document.getElementById('rDiag').textContent   ='Diagnóstico: '+diagnosticoTexto;
   document.getElementById('rSistema').textContent=document.getElementById('cPaneles').textContent;
   document.getElementById('rArea').textContent   ='Área requerida: '+areaSistema.toFixed(1)+' m²';
@@ -727,6 +880,23 @@ function calcCatalogo(){
   const pern=Math.ceil(rie/1.2);
   const fus =Math.ceil(pan/9);
   const comb=fus>1?1:0;
+  catalogoActual={
+    paneles:pan,
+    inversor:inv,
+    estructura:estr,
+    cable10:c10,
+    cable8:c8,
+    tierra:ct,
+    conduit:cond,
+    mc4:mc4,
+    interruptorDC:fus,
+    interruptorAC:inv,
+    fusibles:fus*2,
+    pernos:pern,
+    riel:rie,
+    abrazaderas:abr,
+    combinadora:comb
+  };
 
   document.getElementById('catPan').textContent =pan;
   document.getElementById('catInv').textContent =inv;
@@ -746,8 +916,81 @@ function calcCatalogo(){
   document.getElementById('catFol').textContent ='Folio: '+(folioCotizacion||'—')+'  ·  Sistema: '+potSist.toFixed(1)+' kW  ·  Área: '+areaSistema.toFixed(1)+' m²';
   document.getElementById('catSub').textContent ='Cliente: '+(document.getElementById('nombre').value||'—')+'  —  uso exclusivo Construye Más.';
 }
-function abrirCatalogo(){ calcCatalogo(); document.getElementById('catModal').classList.add('open'); }
-function cerrarCatalogo(){ document.getElementById('catModal').classList.remove('open'); }
+function setCatStatus(msg,err){
+  if(!catStatusEl) catStatusEl=document.getElementById('catStatus');
+  if(!catStatusEl) return;
+  catStatusEl.textContent=msg||'';
+  catStatusEl.style.color=err?'#ffb3b3':'#bdf5c8';
+}
+function getGoogleOriginError(){
+  if(window.location.protocol==='file:') return GOOGLE_OAUTH_LOCAL_MSG;
+  return '';
+}
+function syncGoogleOriginMessage(){
+  const msg=getGoogleOriginError();
+  if(!msg) return '';
+  setDriveStatus(msg,true);
+  setCatStatus(msg,true);
+  return msg;
+}
+function buildPresupuestoInterno(){
+  calcCatalogo();
+  const clienteEl=document.getElementById('nombre');
+  return {
+    folio: folioCotizacion,
+    cliente: clienteEl?clienteEl.value:'',
+    fecha: new Date().toISOString(),
+    sistema: {
+      paneles: catPan,
+      potencia: catPot,
+      kwp: (catPan*catPot)/1000
+    },
+    materiales: {
+      paneles: catPan,
+      inversor: catalogoActual?catalogoActual.inversor:0,
+      estructura: catalogoActual?catalogoActual.estructura:0,
+      cable10: catalogoActual?catalogoActual.cable10:0,
+      cable8: catalogoActual?catalogoActual.cable8:0,
+      tierra: catalogoActual?catalogoActual.tierra:0,
+      conduit: catalogoActual?catalogoActual.conduit:0,
+      mc4: catalogoActual?catalogoActual.mc4:0,
+      fusibles: catalogoActual?catalogoActual.fusibles:0
+    },
+    costos: {
+      precioSistema: precioSistema,
+      ahorroMensual: ahorroMensualGlobal
+    }
+  };
+}
+async function guardarPresupuesto(){
+  try{
+    if(!folioCotizacion||!catPan||!catPot){
+      setCatStatus('Primero genera una cotización antes de guardar el presupuesto.',true);
+      return;
+    }
+    setCatStatus('Guardando presupuesto...',false);
+    const presupuesto=buildPresupuestoInterno();
+    try{
+      localStorage.setItem('CM-PRES-'+folioCotizacion,JSON.stringify(presupuesto));
+    }catch(storageErr){
+      console.warn('LocalStorage:',storageErr);
+    }
+    const jsonBlob=new Blob(
+      [JSON.stringify(presupuesto,null,2)],
+      {type:'application/json'}
+    );
+    const fileName='presupuesto-'+folioCotizacion+'.json';
+    const fileId=await createFile(fileName,'application/json');
+    await uploadFile(fileId,jsonBlob,'application/json');
+    await makePublic(fileId);
+    setCatStatus('Presupuesto guardado correctamente en Drive',false);
+  }catch(e){
+    console.warn('Presupuesto:',e);
+    setCatStatus((e&&e.message)||'No se pudo guardar el presupuesto en Drive.',true);
+  }
+}
+function abrirCatalogo(){ calcCatalogo(); setCatStatus(''); document.getElementById('catModal').classList.add('open'); }
+function cerrarCatalogo(){ document.getElementById('catModal').classList.remove('open'); setCatStatus(''); }
 
 /* ════════════════════════════════════════
    FORMAT UTILS
@@ -805,6 +1048,8 @@ function fmtFecha(dt){
    DRIVE
 ════════════════════════════════════════ */
 function initDrive(){
+  // Google OAuth requiere que la app se ejecute desde un origen autorizado (localhost o dominio), no desde archivos locales (file://).
+  if(syncGoogleOriginMessage()) return;
   if(!window.google||!google.accounts||!google.accounts.oauth2||driveTokenClient) return;
   driveTokenClient=google.accounts.oauth2.initTokenClient({
     client_id:DRIVE_CLIENT_ID,scope:DRIVE_SCOPES,
@@ -814,6 +1059,8 @@ function initDrive(){
 function ensureToken(){
   return new Promise((res,rej)=>{
     if(driveAccessToken) return res(driveAccessToken);
+    const originError=syncGoogleOriginMessage();
+    if(originError) return rej(new Error(originError));
     if(!window.google||!google.accounts||!google.accounts.oauth2) return rej(new Error('GIS no cargado'));
     initDrive();
     if(!driveTokenClient) return rej(new Error('Token client no inicializado'));
@@ -821,15 +1068,16 @@ function ensureToken(){
     driveTokenClient.requestAccessToken({prompt:'consent'});
   });
 }
-async function createFile(name){
+async function createFile(name,mimeType='application/pdf'){
   const t=await ensureToken();
-  const r=await fetch('https://www.googleapis.com/drive/v3/files',{method:'POST',headers:{Authorization:'Bearer '+t,'Content-Type':'application/json'},body:JSON.stringify({name,mimeType:'application/pdf',parents:[DRIVE_FOLDER_ID]})});
+  const r=await fetch('https://www.googleapis.com/drive/v3/files',{method:'POST',headers:{Authorization:'Bearer '+t,'Content-Type':'application/json'},body:JSON.stringify({name,mimeType,parents:[DRIVE_FOLDER_ID]})});
   if(!r.ok) throw new Error('createFile failed');
   return (await r.json()).id;
 }
-async function uploadFile(id,blob){
+async function uploadFile(id,blob,mimeType){
   const t=await ensureToken();
-  const r=await fetch('https://www.googleapis.com/upload/drive/v3/files/'+id+'?uploadType=media',{method:'PATCH',headers:{Authorization:'Bearer '+t,'Content-Type':'application/pdf'},body:blob});
+  const contentType=mimeType||(blob&&blob.type)||'application/pdf';
+  const r=await fetch('https://www.googleapis.com/upload/drive/v3/files/'+id+'?uploadType=media',{method:'PATCH',headers:{Authorization:'Bearer '+t,'Content-Type':contentType},body:blob});
   if(!r.ok) throw new Error('upload failed');
 }
 async function makePublic(id){
@@ -850,6 +1098,8 @@ function copiarLink(){
 }
 async function ensureDriveLink(blob,fileName){
   try{
+    const originError=syncGoogleOriginMessage();
+    if(originError) return null;
     if(!window.google||!google.accounts||!google.accounts.oauth2){setDriveStatus('Google no disponible.',true);return null;}
     setDriveStatus('Guardando en Drive...',false);
     if(!driveFileId) driveFileId=await createFile(fileName);
@@ -860,7 +1110,7 @@ async function ensureDriveLink(blob,fileName){
     setDriveStatus('✓ Guardado en Drive.',false);
     if(SCREENS[idx]==='reporte') generarQR();
     return link;
-  }catch(e){console.warn('Drive:',e);setDriveStatus('No se pudo guardar en Drive.',true);return null;}
+  }catch(e){console.warn('Drive:',e);setDriveStatus((e&&e.message)||'No se pudo guardar en Drive.',true);return null;}
 }
 
 /* ════════════════════════════════════════
@@ -934,10 +1184,18 @@ async function generarPDF(){
     {l:'CONSUMO BIMESTRAL:',v:Number(consumoBi||0).toFixed(0)+' kWh'},
     {l:'PAGO BIMESTRAL:',v:fmtMoney(pagoBi)}
   ];
+  if(dimensionamientoPromedioAnual){
+    c1.push(
+      {l:'PAGO NORMAL BIMESTRAL:',v:fmtMoney(pagoNormalBi)},
+      {l:'PAGO ALTO BIMESTRAL:',v:fmtMoney(pagoAltoBi)}
+    );
+  }
   const c2=[
     {l:'CONSUMO ANUAL:',v:Number(consumoAnual||0).toFixed(0)+' kWh'},
+    {l:'PROMEDIO MENSUAL:',v:Number(consumoMes||0).toFixed(0)+' kWh'},
     {l:'RADIACIÓN:',v:(radiacionSolar||0)+' kWh/kW/año'},
     {l:'DIAGNÓSTICO:',v:diagnosticoTexto||''},
+    {l:'MODO CÁLCULO:',v:calcModeSummary()},
     {l:'SISTEMA:',v:Number(sistemaKW||0).toFixed(1)+' kW'},
     {l:'PANELES:',v:document.getElementById('cPaneles')?document.getElementById('cPaneles').textContent:''},
     {l:'PRODUCCIÓN ANUAL:',v:prodR+' kWh'},
@@ -988,10 +1246,14 @@ window.addEventListener('load',()=>{
   preloadTmpl();
   pdfLinkEl    =document.getElementById('pdfLink');
   driveStatusEl=document.getElementById('driveStatus');
+  catStatusEl  =document.getElementById('catStatus');
   if(pdfLinkEl&&pdfLinkValue) pdfLinkEl.value=pdfLinkValue;
   if(pdfLinkEl) pdfLinkEl.addEventListener('input',()=>{if(SCREENS[idx]==='reporte') generarQR();});
+  syncGoogleOriginMessage();
   initDrive();
   updConsumoDisplay(); updPagoDisplay(); updTarifaDisplay();
+  syncAverageInputs(true);
+  updateAnalysisModeUI();
 });
 setTimeout(()=>nextScreen(),2000);
 </script>
